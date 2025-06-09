@@ -188,6 +188,5 @@ python scripts/start.py
 
 ## 联系方式
 
-- 项目主页：https://github.com/yourusername/LumiMind
-- 问题反馈：https://github.com/yourusername/LumiMind/issues
-- 邮件联系：contact@lumimind.com
+- 项目主页：https://github.com/Moses14159/LumiMind
+- 问题反馈：https://github.com/Moses14159/LumiMind/issues
