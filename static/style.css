@@ -1,0 +1,122 @@
+/* 全局样式 */
+:root {
+    --primary-color: #4A90E2;
+    --secondary-color: #50C878;
+    --background-color: #F5F7FA;
+    --text-color: #2C3E50;
+    --border-radius: 10px;
+    --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 主容器样式 */
+.main {
+    background-color: var(--background-color);
+    padding: 2rem;
+}
+
+/* 标题样式 */
+h1, h2, h3 {
+    color: var(--text-color);
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+/* 卡片样式 */
+.stCard {
+    background-color: white;
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--box-shadow);
+}
+
+/* 按钮样式 */
+.stButton>button {
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: var(--border-radius);
+    padding: 0.5rem 1rem;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.stButton>button:hover {
+    background-color: #357ABD;
+    transform: translateY(-2px);
+}
+
+/* 侧边栏样式 */
+.sidebar .sidebar-content {
+    background-color: white;
+    padding: 1rem;
+}
+
+/* 聊天消息样式 */
+.chat-message {
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.user-message {
+    background-color: var(--primary-color);
+    color: white;
+    margin-left: 20%;
+}
+
+.assistant-message {
+    background-color: #E8F0FE;
+    margin-right: 20%;
+}
+
+/* 进度条样式 */
+.stProgress > div > div {
+    background-color: var(--primary-color);
+}
+
+/* 文件上传区域样式 */
+.stFileUploader {
+    border: 2px dashed #ccc;
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    text-align: center;
+}
+
+/* 选择框样式 */
+.stSelectbox {
+    border-radius: var(--border-radius);
+}
+
+/* 文本输入框样式 */
+.stTextInput > div > div > input {
+    border-radius: var(--border-radius);
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+}
+
+/* 警告和错误消息样式 */
+.stAlert {
+    border-radius: var(--border-radius);
+    padding: 1rem;
+}
+
+/* 代码块样式 */
+.stCodeBlock {
+    background-color: #F8F9FA;
+    border-radius: var(--border-radius);
+    padding: 1rem;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .main {
+        padding: 1rem;
+    }
+    
+    .chat-message {
+        margin-left: 0;
+        margin-right: 0;
+    }
+} 

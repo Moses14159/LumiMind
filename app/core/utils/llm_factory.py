@@ -7,11 +7,15 @@ from langchain_core.language_models import BaseChatModel
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.llms import Ollama
+from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_core.language_models.llms import BaseLLM
 
 # For providers that might not be fully implemented yet
 from langchain_core.language_models.chat_models import BaseChatModel
 
-from config.settings import settings
+from app.config.settings import get_settings
+
+settings = get_settings()
 
 
 class LLMNotConfiguredError(ValueError):
@@ -22,78 +26,68 @@ class LLMNotConfiguredError(ValueError):
 def get_llm(
     provider: Optional[str] = None,
     model_name: Optional[str] = None,
-    **kwargs: Any
-) -> Union[BaseChatModel, LLM]:
+    temperature: float = 0.7,
+    max_tokens: Optional[int] = None
+) -> Union[BaseChatModel, BaseLLM]:
     """
-    Get a LLM instance based on the specified provider.
+    Factory function to get an LLM instance based on the provider.
     
     Args:
-        provider: The LLM provider to use. If None, uses the default provider from settings.
-        model_name: The model name to use. If None, uses the default model for the provider.
-        **kwargs: Additional arguments to pass to the LLM constructor.
-        
-    Returns:
-        A LangChain LLM instance.
-        
-    Raises:
-        ValueError: If the API key or configuration is missing.
-        NotImplementedError: If the provider is not implemented.
-    """
-    if provider is None:
-        provider = settings.DEFAULT_LLM_PROVIDER
-        
-    provider = provider.lower()
+        provider: The LLM provider to use. Defaults to settings.DEFAULT_LLM_PROVIDER.
+        model_name: Specific model name for the provider.
+        temperature: Controls randomness in the output. Higher values make output more random.
+        max_tokens: Maximum number of tokens to generate.
     
-    # OpenAI
-    if provider == "openai":
+    Returns:
+        An instance of the LLM.
+    
+    Raises:
+        ValueError: If the provider is not supported or API key is missing.
+    """
+    selected_provider = provider or settings.DEFAULT_LLM_PROVIDER
+    
+    if selected_provider == "openai":
         if not settings.OPENAI_API_KEY:
-            raise LLMNotConfiguredError("OpenAI API key is not configured")
-        
-        model = model_name or settings.OPENAI_DEFAULT_MODEL
+            raise ValueError("OpenAI API key is not set in environment variables.")
         return ChatOpenAI(
-            openai_api_key=settings.OPENAI_API_KEY,
-            model_name=model,
-            **kwargs
+            api_key=settings.OPENAI_API_KEY,
+            model=model_name or "gpt-3.5-turbo",
+            temperature=temperature,
+            max_tokens=max_tokens
         )
     
-    # Google (Gemini)
-    elif provider == "gemini":
+    elif selected_provider == "gemini":
         if not settings.GEMINI_API_KEY:
-            raise LLMNotConfiguredError("Gemini API key is not configured")
-        
-        model = model_name or settings.GEMINI_DEFAULT_MODEL
+            raise ValueError("Gemini API key is not set in environment variables.")
         return ChatGoogleGenerativeAI(
             google_api_key=settings.GEMINI_API_KEY,
-            model=model,
-            **kwargs
+            model=model_name or "gemini-pro",
+            temperature=temperature,
+            max_output_tokens=max_tokens
         )
     
-    # DeepSeek
-    elif provider == "deepseek":
+    elif selected_provider == "deepseek":
         if not settings.DEEPSEEK_API_KEY:
             raise LLMNotConfiguredError("DeepSeek API key is not configured")
         
         # Placeholder for DeepSeek implementation
         raise NotImplementedError("DeepSeek integration is not implemented yet")
     
-    # SiliconFlow
-    elif provider == "siliconflow":
+    elif selected_provider == "siliconflow":
         if not settings.SILICONFLOW_API_KEY:
             raise LLMNotConfiguredError("SiliconFlow API key is not configured")
         
         # Placeholder for SiliconFlow implementation
         raise NotImplementedError("SiliconFlow integration is not implemented yet")
     
-    # InternLM
-    elif provider == "internlm":
+    elif selected_provider == "internlm":
         if not settings.INTERNLM_API_KEY:
             raise LLMNotConfiguredError("InternLM API key is not configured")
         
         # Placeholder for InternLM implementation
         raise NotImplementedError("InternLM integration is not implemented yet")
     
-    # iFlyTek Spark
-    elif provider == "spark":
+    elif selected_provider == "spark":
         if not all([
             settings.IFLYTEK_SPARK_APPID,
             settings.IFLYTEK_SPARK_API_KEY,
@@ -104,31 +98,19 @@ def get_llm(
         # Placeholder for iFlyTek Spark implementation
         raise NotImplementedError("iFlyTek Spark integration is not implemented yet")
     
-    # Ollama
-    elif provider == "ollama":
-        model = model_name or settings.OLLAMA_DEFAULT_MODEL
+    elif selected_provider == "ollama":
+        if not settings.OLLAMA_BASE_URL:
+            raise ValueError("Ollama base URL is not set.")
         return Ollama(
             base_url=settings.OLLAMA_BASE_URL,
-            model=model,
-            **kwargs
+            model=model_name or settings.OLLAMA_DEFAULT_MODEL,
+            temperature=temperature
         )
     
-    # Unknown provider
     else:
-        raise ValueError(f"Unknown LLM provider: {provider}")
+        raise ValueError(f"Unsupported LLM provider: {selected_provider}")
 
 
-def get_default_llm(**kwargs: Any) -> Union[BaseChatModel, LLM]:
-    """
-    Get the default LLM instance based on the configuration.
-    
-    Args:
-        **kwargs: Additional arguments to pass to the LLM constructor.
-        
-    Returns:
-        A LangChain LLM instance.
-    """
-    return get_llm(
-        provider=settings.DEFAULT_LLM_PROVIDER,
-        **kwargs
-    ) 
+def get_default_llm() -> Union[BaseChatModel, BaseLLM]:
+    """Get the default LLM instance based on settings."""
+    return get_llm() 

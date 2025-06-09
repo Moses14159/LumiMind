@@ -7,6 +7,13 @@ import os
 import logging
 import streamlit as st
 from langchain_core.language_models import BaseChatModel
+from pathlib import Path
+import sys
+
+# Add the project root to the Python path
+project_root = str(Path(__file__).parent.parent)
+if project_root not in sys.path:
+    sys.path.append(project_root)
 
 # Import modules
 from modules.mental_health_page import render_mental_health_page
@@ -14,6 +21,7 @@ from modules.communication_page import render_communication_page
 
 # Import utility functions
 from core.utils.llm_factory import get_llm, get_default_llm
+from config.settings import get_settings
 
 # Import settings
 from config.settings import settings
@@ -85,6 +93,11 @@ def initialize_session_state():
     # Current module
     if "current_module" not in st.session_state:
         st.session_state.current_module = "mental_health"
+
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = []
+    if "chain" not in st.session_state:
+        st.session_state.chain = EmpatheticConversationChain()
 
 
 def render_sidebar():

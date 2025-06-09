@@ -12,7 +12,9 @@ from langchain_community.document_loaders import (
     TextLoader, 
     PyPDFLoader,
     CSVLoader,
-    UnstructuredMarkdownLoader
+    UnstructuredMarkdownLoader,
+    PDFLoader,
+    Docx2txtLoader
 )
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.vectorstores import VectorStore
@@ -29,30 +31,93 @@ class VectorstoreManager:
     Manager for creating, loading, and managing vector stores.
     """
     
-    def __init__(
-        self,
-        vectordb_type: Optional[str] = None,
-        vectordb_path: Optional[str] = None,
-        embedding_model: Optional[str] = None
-    ):
-        """
-        Initialize the VectorstoreManager.
+    def __init__(self, persist_directory: str = "data/vector_db"):
+        self.persist_directory = Path(persist_directory)
+        self.persist_directory.mkdir(parents=True, exist_ok=True)
+        self.embeddings = HuggingFaceEmbeddings(
+            model_name="sentence-transformers/all-MiniLM-L6-v2"
+        )
+        self.vector_store = None
+        self.text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=1000,
+            chunk_overlap=200,
+            length_function=len,
+        )
+
+    def initialize(self):
+        """初始化向量存储"""
+        self.vector_store = Chroma(
+            persist_directory=str(self.persist_directory),
+            embedding_function=self.embeddings,
+        )
+        return self
+
+    def load_documents(self, directory: str, file_types: List[str] = None):
+        """加载文档到向量存储"""
+        if file_types is None:
+            file_types = [".txt", ".pdf", ".docx"]
+
+        # 创建文档加载器
+        loaders = {
+            ".txt": TextLoader,
+            ".pdf": PDFLoader,
+            ".docx": Docx2txtLoader,
+        }
+
+        # 加载文档
+        documents = []
+        for file_type in file_types:
+            if file_type in loaders:
+                loader = DirectoryLoader(
+                    directory,
+                    glob=f"**/*{file_type}",
+                    loader_cls=loaders[file_type]
+                )
+                documents.extend(loader.load())
+
+        # 分割文档
+        texts = self.text_splitter.split_documents(documents)
+
+        # 添加到向量存储
+        if self.vector_store is None:
+            self.initialize()
         
-        Args:
-            vectordb_type: The type of vector database to use ("chroma" or "faiss").
-            vectordb_path: The path to store the vector database.
-            embedding_model: The name of the embedding model to use.
-        """
-        self.vectordb_type = vectordb_type or settings.VECTORDB_TYPE
-        self.vectordb_path = vectordb_path or settings.VECTORDB_PATH
-        self.embedding_model = embedding_model or settings.EMBEDDING_MODEL
+        self.vector_store.add_documents(texts)
+        self.vector_store.persist()
+        return len(texts)
+
+    def search(self, query: str, k: int = 4) -> List[Dict[str, Any]]:
+        """搜索相关文档"""
+        if self.vector_store is None:
+            self.initialize()
         
-        # Initialize the embeddings
-        self.embeddings = HuggingFaceEmbeddings(model_name=self.embedding_model)
+        results = self.vector_store.similarity_search_with_score(query, k=k)
+        return [
+            {
+                "content": doc.page_content,
+                "metadata": doc.metadata,
+                "score": score
+            }
+            for doc, score in results
+        ]
+
+    def clear(self):
+        """清除向量存储"""
+        if self.vector_store is not None:
+            self.vector_store.delete_collection()
+            self.vector_store = None
+
+    def get_stats(self) -> Dict[str, Any]:
+        """获取向量存储统计信息"""
+        if self.vector_store is None:
+            return {"status": "not_initialized"}
         
-        # Create directory if it doesn't exist
-        os.makedirs(self.vectordb_path, exist_ok=True)
-    
+        return {
+            "status": "initialized",
+            "collection_count": self.vector_store._collection.count(),
+            "persist_directory": str(self.persist_directory)
+        }
+
     def get_vectorstore_path(self, collection_name: str) -> str:
         """
         Get the path to a specific vector store collection.
@@ -63,7 +128,7 @@ class VectorstoreManager:
         Returns:
             The path to the collection.
         """
-        return os.path.join(self.vectordb_path, collection_name)
+        return os.path.join(self.persist_directory, collection_name)
     
     def create_or_load_vectorstore(
         self,
@@ -111,20 +176,11 @@ class VectorstoreManager:
         """
         collection_path = self.get_vectorstore_path(collection_name)
         
-        if self.vectordb_type == "chroma":
-            return Chroma(
-                persist_directory=collection_path,
-                embedding_function=self.embeddings,
-                collection_name=collection_name
-            )
-        elif self.vectordb_type == "faiss":
-            return FAISS.load_local(
-                folder_path=collection_path,
-                embeddings=self.embeddings,
-                index_name=collection_name
-            )
-        else:
-            raise ValueError(f"Unsupported vectordb_type: {self.vectordb_type}")
+        return Chroma(
+            persist_directory=collection_path,
+            embedding_function=self.embeddings,
+            collection_name=collection_name
+        )
     
     def _create_vectorstore(self, collection_name: str, documents_path: str) -> VectorStore:
         """
@@ -150,24 +206,14 @@ class VectorstoreManager:
         collection_path = self.get_vectorstore_path(collection_name)
         
         # Create the vector store
-        if self.vectordb_type == "chroma":
-            vectorstore = Chroma.from_documents(
-                documents=splits,
-                embedding=self.embeddings,
-                persist_directory=collection_path,
-                collection_name=collection_name
-            )
-            vectorstore.persist()
-            return vectorstore
-        elif self.vectordb_type == "faiss":
-            vectorstore = FAISS.from_documents(
-                documents=splits,
-                embedding=self.embeddings
-            )
-            vectorstore.save_local(collection_path, index_name=collection_name)
-            return vectorstore
-        else:
-            raise ValueError(f"Unsupported vectordb_type: {self.vectordb_type}")
+        vectorstore = Chroma.from_documents(
+            documents=splits,
+            embedding=self.embeddings,
+            persist_directory=collection_path,
+            collection_name=collection_name
+        )
+        vectorstore.persist()
+        return vectorstore
     
     def _load_documents(self, documents_path: str) -> List:
         """

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <!-- 背景圆形 -->
+    <circle cx="100" cy="100" r="90" fill="#4A90E2" opacity="0.1"/>
+    
+    <!-- 大脑轮廓 -->
+    <path d="M100 30 
+             C 130 30, 160 50, 160 80
+             C 160 110, 140 130, 120 130
+             C 140 130, 160 150, 160 180
+             C 160 190, 150 200, 140 200
+             L 60 200
+             C 50 200, 40 190, 40 180
+             C 40 150, 60 130, 80 130
+             C 60 130, 40 110, 40 80
+             C 40 50, 70 30, 100 30
+             Z" 
+          fill="#4A90E2"/>
+    
+    <!-- 连接线 -->
+    <path d="M70 80 L130 80" stroke="#FFFFFF" stroke-width="3"/>
+    <path d="M70 100 L130 100" stroke="#FFFFFF" stroke-width="3"/>
+    <path d="M70 120 L130 120" stroke="#FFFFFF" stroke-width="3"/>
+    
+    <!-- 文字 -->
+    <text x="100" y="170" 
+          font-family="Arial" 
+          font-size="24" 
+          fill="#FFFFFF" 
+          text-anchor="middle">
+        LumiMind
+    </text>
+</svg> 

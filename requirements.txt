@@ -1,21 +1,49 @@
-streamlit>=1.30.0
-langchain>=0.1.0
-langchain-core>=0.1.0
-langchain-community>=0.1.0
-langchain-openai>=0.1.0
-langchain-google-genai>=0.0.5
-pydantic>=2.5.0
-pydantic-settings>=2.1.0
-sentence-transformers>=2.2.0
-chromadb>=0.4.0
-faiss-cpu>=1.7.0
+# Core dependencies
+streamlit>=1.32.0
+langchain>=0.1.12
+langchain-openai>=0.0.8
+langchain-google-genai>=0.0.11
+langchain-community>=0.0.27
+langchain-text-splitters>=0.0.1
+pydantic>=2.6.4
+pydantic-settings>=2.2.1
+
+# Vector database
+chromadb>=0.4.24
+faiss-cpu>=1.7.4
+
+# Embeddings
+sentence-transformers>=2.5.1
+
+# Utilities
+python-dotenv>=1.0.1
+pathlib>=1.0.1
+typing-extensions>=4.8.0
+
+# Optional: FastAPI backend
+fastapi>=0.109.0
+uvicorn>=0.27.0
+python-multipart>=0.0.6
+
+# Configuration
 python-dotenv>=1.0.0
-openai>=1.14.0
-google-generativeai>=0.3.0
-unstructured>=0.10.0
-PyPDF2>=3.0.0
-pandas>=2.0.0
+
+# Utilities
 numpy>=1.24.0
-tqdm>=4.66.0
-requests>=2.31.0
-textract>=1.6.0 
+pandas>=2.1.0
+tqdm>=4.66.1
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.1
+
+# Document processing
+python-docx>=1.1.0
+PyPDF2>=3.0.1
+unstructured>=0.12.4
+docx2txt>=0.8
+markdown>=3.5.2
+
+# Security
+python-magic>=0.4.27
+python-magic-bin>=0.4.14; sys_platform == 'win32' 
